@@ -25,11 +25,13 @@ public class PlayerMovement : MonoBehaviour
     private float jumpsAvailable = 0;
     private float jumpsMax = 2;
 
+    private float yVelocityWhenFalling = -40.0f;
+
     [SerializeField] private GameObject model;          // a reference to the model (inside the Player gameObject)
     private float rotateToFaceMovementSpeed = 5f;       // the speed to rotate our model towards the movement vector
 
-    //[SerializeField] private Camera cam;                // a reference to the main camera
-    //private float rotateToFaceAwayFromCameraSpeed = 5f; // the speed to rotate our Player to align with the camera view.
+    [SerializeField] private Camera cam;                // a reference to the main camera
+    private float rotateToFaceAwayFromCameraSpeed = 5f; // the speed to rotate our Player to align with the camera view.
 
 
     private void Start()
@@ -68,6 +70,8 @@ public class PlayerMovement : MonoBehaviour
         // calculate yVelocity and add it to the player's movement vector
         yVelocity += gravity * Time.deltaTime;
 
+        yVelocity = Mathf.Max(yVelocity, -41.0f);
+
         // if we are on the ground and we were falling
         if( cc.isGrounded && yVelocity < 0.0)
         {
@@ -75,8 +79,10 @@ public class PlayerMovement : MonoBehaviour
             jumpsAvailable = jumpsMax;
         }
 
+        
+
         // give upward y Velocity if we jumped
-        if(Input.GetButtonDown("Jump") && jumpsAvailable > 0)
+        if (Input.GetButtonDown("Jump") && jumpsAvailable > 0)
         {
             anim.SetTrigger("jump");
             yVelocity = initialJumpVelocity;
@@ -94,6 +100,13 @@ public class PlayerMovement : MonoBehaviour
         // rotate the player
         Vector3 rotation = Vector3.up * rotationSpeed * Time.deltaTime * Input.GetAxis("Mouse X");
         transform.Rotate(rotation);
+
+        if (!cc.isGrounded && yVelocity < -40.0)
+        {
+            anim.SetBool("isFalling", true);
+        }
+        
+
     }
 
 
@@ -114,13 +127,13 @@ public class PlayerMovement : MonoBehaviour
     private void RotatePlayerToFaceAwayFromCamera()
     {
         // isolate the camera's Y rotation
-        //Quaternion camRotation = Quaternion.Euler(0, cam.transform.rotation.eulerAngles.y, 0);
+        Quaternion camRotation = Quaternion.Euler(0, cam.transform.rotation.eulerAngles.y, 0);
 
         // set the player's rotation
         //transform.rotation = camRotation;
         
         // replace the above line with this one to enable smoothing
-        //transform.rotation = Quaternion.Slerp(transform.rotation, camRotation, rotateToFaceAwayFromCameraSpeed * Time.deltaTime);
+        transform.rotation = Quaternion.Slerp(transform.rotation, camRotation, rotateToFaceAwayFromCameraSpeed * Time.deltaTime);
     }
 
 }
